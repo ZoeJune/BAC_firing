@@ -4,7 +4,7 @@ I N T R O D U C T I O N
 
 Back-propagating action potential-activated Ca2+ spike (BAC) firing, first described by Larkum et al. (1999), is a burst of action potentials (APs) followed by a Ca2+-AP in the apical dendrite, resulting from the combined injection of current at the soma and apical dendrite. Due to backpropagation of APs, the threshold for a dendritic Ca2+ spike is subsequently lowered and leads to a burst firing (Larkum, 2013). 
 
-This project replicates BAC firing using the developed reduced-morphology model by Mäki-Marttunen et al. (2018), and reviews the biophysical processes underlying BAC firing using some of the criteria presented by Bast and Oberlaender (2021) and Goetz et al. (2021). Furthermore, a Python script was written to detect such BAC criteria. This work aims to lay the groundwork for further developing a generalized BAC firing detection script that can be used for other computational models.
+This project replicates BAC firing using the reduced-morphology model by Mäki-Marttunen et al. (2018), and reviews the biophysical processes underlying BAC firing using some of the criteria presented by Bast and Oberlaender (2021) and Goetz et al. (2021). Furthermore, a Python script was written to detect such BAC criteria. This work aims to lay the groundwork for further developing a generalized BAC firing detection script that can be used for other computational models.
 
 
 I N S T R U C T I O N
