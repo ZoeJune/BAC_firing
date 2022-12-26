@@ -15,7 +15,7 @@ https://www.neuron.yale.edu/neuron/
 Reduced-morphology model by Mäki-Marttunen et al. (2018) can be found here:
 https://senselab.med.yale.edu/ModelDB/showmodel.cshtml?model=187474#tabs-1
 
-Marttunen_template_CaFix serves merely as a template for developing simulations in hoc. It cannot be opened within NEURON interface.
+Marttunen_Template_CaFix serves merely as a template for developing simulations in hoc. It cannot be opened within NEURON interface.
 
 
 
