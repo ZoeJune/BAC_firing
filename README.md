@@ -6,7 +6,7 @@ Back-propagating action potential-activated Ca2+ spike (BAC) firing, first descr
 
 This project replicates BAC firing using the reduced-morphology model by Mäki-Marttunen et al. (2018), and reviews the biophysical processes underlying BAC firing using some of the criteria presented by Bast and Oberlaender (2021) and Goetz et al. (2021). Furthermore, a Python script was written to detect such BAC criteria. This work aims to lay the groundwork for further developing a generalized BAC firing detection script that can be applied for other computational models.
 
-Used coding languages: 
+Programming languages: 
 hoc,
 Python
 
