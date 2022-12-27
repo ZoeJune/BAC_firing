@@ -16,7 +16,7 @@ Reduced-morphology model by Mäki-Marttunen et al. (2018) can be found here:
 https://senselab.med.yale.edu/ModelDB/showmodel.cshtml?model=187474#tabs-1
 
 Marttunen_Template_CaFix.hoc serves merely as a template for developing simulations in hoc. It cannot be opened within NEURON interface. It describes the basic properties (channels and their features) and components (soma, dendrites, etc.) of a passive neuron.
-Marttunen_Simulation.hoc is a coding script written in hoc to stimulate the neuron, i.e. turning it into an activen neuron.
+Marttunen_Simulation.hoc is a coding script written in hoc to stimulate the neuron, i.e. turning it into an activen neuron which can be openend within NEURON. 
 
 
 
