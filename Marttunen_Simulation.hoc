@@ -1,0 +1,396 @@
+//simulation script for implementing different stimulating conditions
+
+load_file("nrngui.hoc")									  //access to NEURON interface to run simulations
+load_file("Marttunen_Template_CaFix.hoc") //access to template that contains passive neuron
+
+
+//creating active neuron based on template
+objref cell
+cell = new Marttunen_Template_CaFix()
+
+
+//stimulating soma and apical dendrite
+objref stim_soma, stim_apic					
+cell.soma stim_soma = new IClamp(0)
+stim_soma.del = 300
+stim_soma.dur = 5
+stim_soma.amp = 1.9                 	//varies according to different CURRENT input conditions
+cell.apic[0] stim_apic = new epsp(1)
+stim_apic.onset = 305 						 	  //onset varies according to different TIME input conditions, ranges from 280ms to 320ms
+stim_apic.imax = 0.7 		              //varies according to different CURRENT input conditions
+tstop = 500
+
+
+//for BAC project: only soma and apic2 important
+//recordings and plots of apic1 and dend are optional, and only included for the sake of completeness
+
+
+//recording voltage of each segment
+objref rect, recv_soma, recv_apic1, recv_apic2, recv_dend 				
+rect = new Vector()
+rect.record(&t)
+recv_soma = new Vector()
+recv_soma.record(&cell.soma.v(0))
+recv_apic1 = new Vector()
+recv_apic1.record(&cell.apic[0].v(1))	
+recv_apic2 = new Vector()
+recv_apic2.record(&cell.apic[1].v(1))
+recv_dend = new Vector()
+recv_dend.record(&cell.dend.v(0))
+
+n_segments = 5
+objref listSegments
+listSegments = new List()              
+for j = 0, n_segments - 1 {
+  listSegments.append(new List())                      
+}
+forall {                                            
+    listSegments.o(0).append(new Vector())
+    listSegments.o(0).o(listSegments.o(0).count() - 1).record(&cell.soma.v(0))  
+
+    listSegments.o(1).append(new Vector())
+    listSegments.o(1).o(listSegments.o(1).count() - 1).record(&cell.apic[0].v(1))
+
+    listSegments.o(2).append(new Vector())
+    listSegments.o(2).o(listSegments.o(2).count() - 1).record(&cell.apic[1].v(1))
+
+    listSegments.o(3).append(new Vector())
+    listSegments.o(3).o(listSegments.o(3).count() - 1).record(&cell.dend.v(0)) 
+  }
+
+
+//recording current of each channel (all segments)
+n_channels = 11
+objref listAll
+listAll = new List()							
+for j = 0, n_channels - 1 {
+	listAll.append(new List())      	            		
+}
+forall {																		        
+	if(ismembrane("Ih")) { 														
+		listAll.o(0).append(new Vector())
+		listAll.o(0).o(listAll.o(0).count() - 1).record(&ihcn_Ih(0))
+	}
+	if(ismembrane("NaTa_t")) {
+		listAll.o(1).append(new Vector())
+		listAll.o(1).o(listAll.o(1).count() - 1).record(&ina_NaTa_t(0))
+	}
+	if(ismembrane("Nap_Et2")) {
+		listAll.o(2).append(new Vector())
+		listAll.o(2).o(listAll.o(2).count() - 1).record(&ina_Nap_Et2(0))
+	}
+	if(ismembrane("K_Pst")) {
+		listAll.o(3).append(new Vector())
+		listAll.o(3).o(listAll.o(3).count() - 1).record(&ik_K_Pst(0))
+	}
+	if(ismembrane("K_Tst")) {
+		listAll.o(4).append(new Vector())
+		listAll.o(4).o(listAll.o(4).count() - 1).record(&ik_K_Tst(0))
+	}
+	if(ismembrane("SK_E2")) {
+		listAll.o(5).append(new Vector())
+		listAll.o(5).o(listAll.o(5).count() - 1).record(&ik_SK_E2(0))
+	}
+	if(ismembrane("SKv3_1")) {
+		listAll.o(6).append(new Vector())
+		listAll.o(6).o(listAll.o(6).count() - 1).record(&ik_SKv3_1(0))
+	}
+	if(ismembrane("Ca_HVA")) {
+		listAll.o(7).append(new Vector())
+		listAll.o(7).o(listAll.o(7).count() - 1).record(&ica_Ca_HVA(0))
+	}
+	if(ismembrane("Ca_LVAst")) {
+		listAll.o(8).append(new Vector())
+		listAll.o(8).o(listAll.o(8).count() - 1).record(&ica_Ca_LVAst(0))
+	}
+	if(ismembrane("Im")){
+		listAll.o(9).append(new Vector())
+		listAll.o(9).o(listAll.o(9).count() - 1).record(&ik_Im(0))
+	}
+}
+
+init()
+run()
+
+
+//voltage plots
+objref graph_recv_soma, graph_recv_apic1, graph_recv_apic2, graph_recv_dend		
+
+graph_recv_soma = new Graph()
+graph_recv_soma.size(rect.min(), rect.max(), recv_soma.min(), recv_soma.max())
+recv_soma.line(graph_recv_soma, rect, 1,1) // black
+
+graph_recv_apic1 = new Graph()
+graph_recv_apic1.size(rect.min(), rect.max(), recv_apic1.min(), recv_apic1.max())
+recv_apic1.line(graph_recv_apic1, rect, 2,1) // red
+
+graph_recv_apic2 = new Graph()
+graph_recv_apic2.size(rect.min(), rect.max(), recv_apic2.min(), recv_apic2.max())
+recv_apic2.line(graph_recv_apic2, rect, 3,1) // blue 
+
+graph_recv_dend = new Graph()
+graph_recv_dend.size(rect.min(), rect.max(), recv_dend.min(), recv_dend.max())
+recv_dend.line(graph_recv_dend, rect, 4,1) //  green
+
+
+//current plots
+objref listGraph																
+listGraph = new List()
+for j = 0, listAll.count() - 1 {				
+	if(listAll.o(j).count() > 0) {				
+		listGraph.append(new Graph())			
+	}
+	tempmin = 0
+	tempmax = 0
+	for k = 0, listAll.o(j).count() - 1 {		
+		if(listAll.o(j).o(k).min() < tempmin) {
+			tempmin = listAll.o(j).o(k).min()	
+		}
+		if(listAll.o(j).o(k).max() > tempmax) {
+			tempmax = listAll.o(j).o(k).max()	
+		}
+		listAll.o(j).o(k).line(listGraph.o(j), rect, k+1, 1)	
+	}
+	if(j <= listGraph.count() - 1) {			
+		listGraph.o(j).size(rect.min(), rect.max(), tempmin, tempmax)
+	}
+}
+
+
+
+//converting voltage plots into txt files 
+objref file_soma, file_apic1, file_apic2, file_dend
+
+file_soma = new File()
+file_apic1 = new File()
+file_apic2 = new File()
+file_dend = new File()
+
+file_soma.wopen("soma.txt")
+file_apic1.wopen("apic1.txt")
+file_apic2.wopen("apic2.txt")
+file_dend.wopen("dend.txt")
+
+for j = 0, listSegments.o(0).count() - 1 {
+  listSegments.o(0).o(j).printf(file_soma, "%g ")
+  listSegments.o(1).o(j).printf(file_apic1, "%g ")
+  listSegments.o(2).o(j).printf(file_apic2, "%g ")
+  listSegments.o(3).o(j).printf(file_dend, "%g ")
+}
+
+file_soma.close()
+file_apic1.close()
+file_apic2.close()
+file_dend.close()
+
+
+
+//converting current plots into txt files
+//for soma
+objref fileIh_soma, fileNaTa_t_soma, fileNap_Et2_soma, fileK_Pst_soma, fileK_Tst_soma, fileSK_E2_soma, fileSKv3_1_soma, fileCa_HVA_soma, fileCa_LVAst_soma, fileIm_soma
+for j = 0, listAll.count() - 1 { 
+  if(j == 0) {
+    for k = 0, listAll.o(j).count() - 1 { 
+      fileIh_soma = new File()
+      fileIh_soma.wopen("BAC_ih_soma.txt")
+      listAll.o(0).o(k).printf(fileIh_soma, "%g ")
+      fileIh_soma.close()
+      }
+    }
+  if(j == 1) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileNaTa_t_soma = new File()
+      fileNaTa_t_soma.wopen("BAC_NaTa_t_soma.txt")
+      listAll.o(1).o(k).printf(fileNaTa_t_soma, "%g ")
+      fileNaTa_t_soma.close()
+      }
+    }
+  if(j == 2) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileNap_Et2_soma = new File()
+      fileNap_Et2_soma.wopen("BAC_Nap_Et2_soma.txt")
+      listAll.o(2).o(k).printf(fileNap_Et2_soma, "%g ")
+      fileNap_Et2_soma.close()
+      }
+    }
+  if(j == 3) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileK_Pst_soma = new File()
+      fileK_Pst_soma.wopen("BAC_K_Pst_soma.txt")
+      listAll.o(3).o(k).printf(fileK_Pst_soma, "%g ")
+      fileK_Pst_soma.close()
+      }
+    }
+  if(j == 4) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileK_Tst_soma = new File()
+      fileK_Tst_soma.wopen("BAC_K_Tst_soma.txt")
+      listAll.o(4).o(k).printf(fileK_Tst_soma, "%g ")
+      fileK_Tst_soma.close()
+      }
+    }
+  if(j == 5) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileSK_E2_soma = new File()
+      fileSK_E2_soma.wopen("BAC_SK_E2_soma.txt")
+      listAll.o(5).o(k).printf(fileSK_E2_soma, "%g ")  
+      fileSK_E2_soma.close()
+      }
+    }
+  if(j == 6) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileSKv3_1_soma = new File()
+      fileSKv3_1_soma.wopen("BAC_SKv3_1_soma.txt")
+      listAll.o(6).o(k).printf(fileSKv3_1_soma, "%g ")  
+      fileSKv3_1_soma.close()
+      }
+    }
+  if(j == 7) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileCa_HVA_soma = new File()
+      fileCa_HVA_soma.wopen("BAC_Ca_HVA_soma.txt")
+      listAll.o(7).o(k).printf(fileCa_HVA_soma, "%g ")  
+      fileCa_HVA_soma.close()
+      }
+    }
+  if(j == 8) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileCa_LVAst_soma = new File()
+      fileCa_LVAst_soma.wopen("BAC_Ca_LVAst_soma.txt")
+      listAll.o(8).o(k).printf(fileCa_LVAst_soma, "%g ")
+      fileCa_LVAst_soma.close()
+      }
+    }
+}
+//for apic1
+objref fileIh_apic1, fileNaTa_t_apic1, fileNap_Et2_apic1, fileK_Pst_apic1, fileK_Tst_apic1, fileSK_E2_apic1, fileSKv3_1_apic1, fileCa_HVA_apic1, fileCa_LVAst_apic1, fileIm_apic1
+for j = 0, listAll.count() - 1 { 
+  if(j == 0) {
+    for k = 0, listAll.o(j).count() - 1 { 
+      fileIh_apic1 = new File()
+      fileIh_apic1.wopen("BAC_ih_apic1.txt")
+      listAll.o(0).o(k).printf(fileIh_apic1, "%g ")
+      fileIh_apic1.close()
+      }
+    }
+  if(j == 1) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileNaTa_t_apic1 = new File()
+      fileNaTa_t_apic1.wopen("BAC_NaTa_t_apic1.txt")
+      listAll.o(1).o(k).printf(fileNaTa_t_apic1, "%g ")
+      fileNaTa_t_apic1.close()
+      }
+    }
+  if(j == 2) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileSK_E2_apic1 = new File()
+      fileSK_E2_apic1.wopen("BAC_SK_E2_apic1.txt")
+      listAll.o(2).o(k).printf(fileSK_E2_apic1, "%g ")  
+      fileSK_E2_apic1.close()
+      }
+    }
+  if(j == 3) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileSKv3_1_apic1 = new File()
+      fileSKv3_1_apic1.wopen("BAC_SKv3_1_apic1.txt")
+      listAll.o(3).o(k).printf(fileSKv3_1_apic1, "%g ")  
+      fileSKv3_1_apic1.close()
+      }
+    }
+  if(j == 4) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileCa_HVA_apic1 = new File()
+      fileCa_HVA_apic1.wopen("BAC_Ca_HVA_apic1.txt")
+      listAll.o(4).o(k).printf(fileCa_HVA_apic1, "%g ")  
+      fileCa_HVA_apic1.close()
+      }
+    }
+  if(j == 5) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileCa_LVAst_apic1 = new File()
+      fileCa_LVAst_apic1.wopen("BAC_Ca_LVAst_apic1.txt")
+      listAll.o(5).o(k).printf(fileCa_LVAst_apic1, "%g ")
+      fileCa_LVAst_apic1.close()
+      }
+    }
+  if(j == 6) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileIm_apic1 = new File()
+      fileIm_apic1.wopen("BAC_Im_apic1.txt")
+      listAll.o(6).o(k).printf(fileIm_apic1, "%g ")
+      fileIm_apic1.close()
+      }
+    }
+}
+//for apic2
+objref fileIh_apic2, fileNaTa_t_apic2, fileNap_Et2_apic2, fileK_Pst_apic2, fileK_Tst_apic2, fileSK_E2_apic2, fileSKv3_1_apic2, fileCa_HVA_apic2, fileCa_LVAst_apic2, fileIm_apic2
+for j = 0, listAll.count() - 1 { 
+  if(j == 0) {
+    for k = 0, listAll.o(j).count() - 1 { 
+      fileIh_apic2 = new File()
+      fileIh_apic2.wopen("BAC_ih_apic2_300ms.txt")
+      listAll.o(0).o(k).printf(fileIh_apic2, "%g ")
+      fileIh_apic2.close()
+      }
+    }
+  if(j == 1) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileNaTa_t_apic2 = new File()
+      fileNaTa_t_apic2.wopen("BAC_NaTa_t_apic2.txt")
+      listAll.o(1).o(k).printf(fileNaTa_t_apic2, "%g ")
+      fileNaTa_t_apic2.close()
+      }
+    }
+  if(j == 2) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileSK_E2_apic2 = new File()
+      fileSK_E2_apic2.wopen("BAC_SK_E2_apic2.txt")
+      listAll.o(2).o(k).printf(fileSK_E2_apic2, "%g ")  
+      fileSK_E2_apic2.close()
+      }
+    }
+  if(j == 3) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileSKv3_1_apic2 = new File()
+      fileSKv3_1_apic2.wopen("BAC_SKv3_1_apic2.txt")
+      listAll.o(3).o(k).printf(fileSKv3_1_apic2, "%g ")  
+      fileSKv3_1_apic2.close()
+      }
+    }
+  if(j == 4) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileCa_HVA_apic2 = new File()
+      fileCa_HVA_apic2.wopen("BAC_Ca_HVA_apic2.txt")
+      listAll.o(4).o(k).printf(fileCa_HVA_apic2, "%g ")  
+      fileCa_HVA_apic2.close()
+      }
+    }
+  if(j == 5) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileCa_LVAst_apic2 = new File()
+      fileCa_LVAst_apic2.wopen("BAC_Ca_LVAst_apic2.txt")
+      listAll.o(5).o(k).printf(fileCa_LVAst_apic2, "%g ")
+      fileCa_LVAst_apic2.close()
+      }
+    }
+  if(j == 6) {
+    for k = 0, listAll.o(j).count() - 1 {
+      fileIm_apic2 = new File()
+      fileIm_apic2.wopen("BAC_Im_apic2.txt")
+      listAll.o(6).o(k).printf(fileIm_apic2, "%g ")
+      fileIm_apic2.close()
+      }
+    }
+}
+//for dend
+objref fileIh_dend
+for j = 0, listAll.count() - 1 { 
+  if(j == 0) {
+    for k = 0, listAll.o(j).count() - 1 { 
+      fileIh_dend = new File()
+      fileIh_dend.wopen("BAC_ih_dend.txt")
+      listAll.o(0).o(k).printf(fileIh_dend, "%g ")
+      fileIh_dend.close()
+      }
+    }
+}
